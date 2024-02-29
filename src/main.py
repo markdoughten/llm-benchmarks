@@ -4,26 +4,33 @@ import ollama
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def run(models, ask, gpu):
+def run(models, question, gpu, graph, loops=1):
    
     # ask the models the prompts 
     performances = []
-    for model in models:
-        if gpu:
-            performances.append(ollama.generate(model=model, prompt=ask, options={'main_gpu':0, 'num_gpu':33}))
-        else:
-            performances.append(ollama.generate(model=model, prompt=ask, options={'main_gpu':0, 'num_gpu':0}))
+    while loops != 0: 
+        for model in models:
+            performances.append(run_model(model, gpu, question))
+        loops -=1  
     
     # calculate metrics 
     metrics = calculate(performances)
     metrics = pd.DataFrame(metrics)
-    
-    # plot time and count 
-    plot(metrics, 'Seconds', ['total_duration', 'load_duration', 'prompt_eval_duration', 'eval_duration'], gpu)
-    plot(metrics, 'Count', ['prompt_eval_count', 'eval_count'], gpu)
-    plot(metrics, 'Token per Second', ['prompt_eval_per_second',  'eval_per_second', 'total_per_second'], gpu)
+   
+    if graph: 
+        # plot time and count 
+        plot(metrics, 'Seconds', ['total_duration', 'load_duration', 'prompt_eval_duration', 'eval_duration'], gpu)
+        plot(metrics, 'Count', ['prompt_eval_count', 'eval_count'], gpu)
+        plot(metrics, 'Token per Second', ['prompt_eval_per_second',  'eval_per_second', 'total_per_second'], gpu)
     
     return metrics
+
+def run_model(model, gpu, prompt):
+
+    if gpu:
+        return ollama.generate(model=model, prompt=prompt, options={'main_gpu':0, 'num_gpu':33})
+    else:
+        return ollama.generate(model=model, prompt=prompt, options={'main_gpu':0, 'num_gpu':0})
 
 def calculate(performances):
     nanoseconds = 10**9
@@ -46,7 +53,7 @@ def plot(metrics, units, keys, gpu):
     metrics = metrics[keys] 
 
     fig, ax = plt.subplots(figsize=(8, 8), dpi=96)   
-    metrics.set_index('model').plot(kind='bar', ax=ax, rot=0)
+    metrics.set_index('model').groupby(level=0).median().plot(kind='bar', ax=ax, rot=0)
     
     if gpu:
         plt.title('GPU')
@@ -71,10 +78,11 @@ def save(df, gpu):
 
 if __name__ == '__main__':
     
+    gpu = True
+    graph = True
     models = ['llama2:7b-chat-q4_0', 'llama2:7b-chat-q5_0', 'llama2:7b-chat-q8_0']
-    gpu = False
-    ask = "Where is Rutgers University?"
+    question = "Where is Rutger's University?"
    
     # run on the gpu 
-    metrics = run(models, ask, gpu)
+    metrics = run(models, question, gpu, graph, loops=10)
     save(metrics, gpu) 
