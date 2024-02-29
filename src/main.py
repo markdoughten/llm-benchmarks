@@ -76,11 +76,17 @@ def save(df, gpu):
     
     return df.to_csv(f'../data/{prefix}_metrics.csv', index=False)
 
+def get_model():
+    models = []
+    for model in ollama.list()['models']:
+        models.append(model['name']))
+    return models
+
 if __name__ == '__main__':
     
     gpu = True
     graph = True
-    models = ['llama2:7b-chat-q4_0', 'llama2:7b-chat-q5_0', 'llama2:7b-chat-q8_0']
+    models = get_models()
     question = "Where is Rutger's University?"
    
     # run on the gpu 
