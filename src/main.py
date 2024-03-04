@@ -1,18 +1,20 @@
 # custom libraries
-from lib import helpers
+from lib import questions
 import ollama
 import pandas as pd
 import matplotlib.pyplot as plt
+import random
 
-def run(models, question, gpu, graph, loops=1):
+def run(models, questions, gpu, graph, loops=1):
    
     # ask the models the prompts 
     performances = []
-    while loops != 0: 
-        for model in models:
-            performances.append(run_model(model, gpu, question))
-        loops -=1  
-    
+    for question in questions:
+        while loops != 0: 
+            for model in models:
+                performances.append(run_model(model, gpu, question))
+            loops -=1  
+        
     # calculate metrics 
     metrics = calculate(performances)
     metrics = pd.DataFrame(metrics)
@@ -27,10 +29,14 @@ def run(models, question, gpu, graph, loops=1):
 
 def run_model(model, gpu, prompt):
 
+    output = {'prompt': prompt}
+
     if gpu:
-        return ollama.generate(model=model, prompt=prompt, options={'main_gpu':0, 'num_gpu':33})
+        data = ollama.generate(model=model, prompt=prompt, options={'main_gpu':0, 'num_gpu':33})
     else:
-        return ollama.generate(model=model, prompt=prompt, options={'main_gpu':0, 'num_gpu':0})
+        data = ollama.generate(model=model, prompt=prompt, options={'main_gpu':0, 'num_gpu':0})
+
+    return merge_two_dicts(output, data)
 
 def calculate(performances):
     nanoseconds = 10**9
@@ -68,27 +74,44 @@ def plot(metrics, units, keys, gpu):
     return
 
 def save(df, gpu):
-    
     if gpu:
         prefix = 'gpu'
     else:
         prefix = 'cpu'
-    
     return df.to_csv(f'../data/{prefix}_metrics.csv', index=False)
 
-def get_model():
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
+
+def get_models():
     models = []
     for model in ollama.list()['models']:
-        models.append(model['name']))
+        models.append(model['name'])
     return models
 
 if __name__ == '__main__':
     
     gpu = True
     graph = True
+    random_select = True
+    write = True
+    n = 1
     models = get_models()
-    question = "Where is Rutger's University?"
+    questions = questions.get_questions()
+
+    if n > len(questions):
+        print('n is too big, only {len(questions)}')
+        exit()
+
+    if random_select:
+        questions = random.sample(questions, k=n)
    
     # run on the gpu 
-    metrics = run(models, question, gpu, graph, loops=10)
-    save(metrics, gpu) 
+    metrics = run(models, questions, gpu, graph, loops=1)
+    
+    print(metrics.to_string())
+    if write:
+        save(metrics, gpu) 
+
