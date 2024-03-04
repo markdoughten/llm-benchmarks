@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 
-def run(models, questions, gpu, graph, loops=1):
+def run(models, questions, gpu, graph, loops=1, kind='bar'):
    
     # ask the models the prompts 
     performances = []
@@ -21,9 +21,9 @@ def run(models, questions, gpu, graph, loops=1):
    
     if graph: 
         # plot time and count 
-        plot(metrics, 'Seconds', ['total_duration', 'load_duration', 'prompt_eval_duration', 'eval_duration'], gpu)
-        plot(metrics, 'Count', ['prompt_eval_count', 'eval_count'], gpu)
-        plot(metrics, 'Token per Second', ['prompt_eval_per_second',  'eval_per_second', 'total_per_second'], gpu)
+        plot(metrics, 'Seconds', ['total_duration', 'load_duration', 'prompt_eval_duration', 'eval_duration'], gpu, kind)
+        plot(metrics, 'Count', ['prompt_eval_count', 'eval_count'], gpu, kind)
+        plot(metrics, 'Token per Second', ['prompt_eval_per_second',  'eval_per_second', 'total_per_second'], gpu, kind)
     
     return metrics
 
@@ -53,14 +53,18 @@ def calculate(performances):
 
     return performances
     
-def plot(metrics, units, keys, gpu):
+def plot(metrics, units, keys, gpu, kind):
    
     keys.append('model')
     metrics = metrics[keys] 
 
-    fig, ax = plt.subplots(figsize=(8, 8), dpi=96)   
-    metrics.set_index('model').groupby(level=0).median().plot(kind='bar', ax=ax, rot=0)
-    
+    fig, ax = plt.subplots(figsize=(8, 8), dpi=96)
+
+    if kind == 'box':
+         metrics.set_index('model').plot(kind=kind, ax=ax, rot=0)
+    else:
+        metrics.set_index('model').groupby(level=0).median().plot(kind=kind, ax=ax, rot=0)
+
     if gpu:
         plt.title('GPU')
     else: 
@@ -93,10 +97,9 @@ def get_models():
 
 if __name__ == '__main__':
     
-    gpu = True
-    graph = True
     random_select = True
     write = True
+    gpu = True
     n = 1
     models = get_models()
     questions = questions.get_questions()
@@ -109,9 +112,8 @@ if __name__ == '__main__':
         questions = random.sample(questions, k=n)
    
     # run on the gpu 
-    metrics = run(models, questions, gpu, graph, loops=1)
+    metrics = run(models, questions, gpu, graph=True, loops=1, kind='box')
     
-    print(metrics.to_string())
     if write:
         save(metrics, gpu) 
 
