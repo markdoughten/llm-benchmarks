@@ -71,9 +71,8 @@ def plot(metrics, units, keys, gpu, kind, write, asks):
     if gpu:
         plt.title(f'GPU: {info}')
     else: 
-        plt.title('CPU: {info}')    
+        plt.title(f'CPU: {info}')    
      
-    plt.xlabel('Model')
     plt.ylabel(units)
     plt.tight_layout()
 
@@ -115,7 +114,7 @@ if __name__ == '__main__':
     write = True
     gpu = True
     num_questions = 1
-    num_asks = 10 
+    num_asks = 10
     models = get_models()
     questions = questions.get_questions()
     both = True
