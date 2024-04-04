@@ -51,7 +51,7 @@ def calculate(performances):
         # calculate time per count
         model['prompt_eval_per_second'] = model['prompt_eval_duration']/model['prompt_eval_count']
         model['eval_per_second'] = model['eval_duration']/model['eval_count']
-        model['total_per_second'] = model['total_duration']/(model['eval_count']+model['prompt_eval_count'])
+        model['token_per_second'] = (model['eval_count']+model['prompt_eval_count'])/model['total_duration']
 
     return performances
     
