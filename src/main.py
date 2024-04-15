@@ -25,7 +25,7 @@ def run(models, questions, gpu=True, write=False, graph=True, asks=1, display=['
             # plot time and count 
             plot(metrics, 'Seconds', ['total_duration', 'load_duration', 'prompt_eval_duration', 'eval_duration'], gpu, kind, write, num_asks)
             plot(metrics, 'Count', ['prompt_eval_count', 'eval_count'], gpu, kind, write, num_asks)
-            plot(metrics, 'Token per Second', ['prompt_eval_per_second',  'eval_per_second', 'total_per_second'], gpu, kind, write, num_asks)
+            plot(metrics, 'Tokens per Second', ['prompt_eval_per_second',  'eval_per_second', 'total_per_second'], gpu, kind, write, num_asks)
      
     return metrics
 
@@ -41,17 +41,20 @@ def run_model(model, gpu, prompt):
     return merge_two_dicts(output, data)
 
 def calculate(performances):
+    
     nanoseconds = 10**9
     for model in performances:
+        
         keys = ['load_duration', 'total_duration', 'prompt_eval_duration', 'eval_duration']
+        
         # convert to seconds
         for key in keys:
             model[key] = model[key]/nanoseconds
         
         # calculate time per count
-        model['prompt_eval_per_second'] = model['prompt_eval_duration']/model['prompt_eval_count']
-        model['eval_per_second'] = model['eval_duration']/model['eval_count']
-        model['token_per_second'] = (model['eval_count']+model['prompt_eval_count'])/model['total_duration']
+        model['prompt_eval_per_second'] = model['prompt_eval_count']/model['prompt_eval_duration']
+        model['eval_per_second'] = model['eval_count']/model['eval_duration']
+        model['total_per_second'] = (model['eval_count']+model['prompt_eval_count'])/model['total_duration']
 
     return performances
     
@@ -91,7 +94,7 @@ def save(df=None, gpu=None, chart=False, plt=None):
         prefix = 'cpu'
     
     if chart:
-        plt.savefig(f'../data/charts/{prefix}/{random.randint(1, 100)}.png')
+        plt.savefig(f'../data/charts/{prefix}/{random.randint(1, 1000)}.png')
     else:
         df.to_csv(f'../data/metrics.csv', index=False)
     
