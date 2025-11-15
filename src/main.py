@@ -9,13 +9,13 @@ def run(models, questions, gpu=True, write=False, graph=True, asks=1, display=['
     
     # ask the models the prompts 
     performances = []
-    num_asks = asks
     for question in questions:
-        while asks != 0: 
+        remaining = asks  # reset counter for each question
+        while remaining > 0:
             for model in models:
                 performances.append(run_model(model, gpu, question))
-            asks -=1  
-        
+            remaining -= 1
+
     # calculate metrics 
     metrics = calculate(performances)
     metrics = pd.DataFrame(metrics)
@@ -116,8 +116,8 @@ if __name__ == '__main__':
     random_select = True
     write = True
     gpu = True
-    num_questions = 1
-    num_asks = 10
+    num_questions = 25
+    num_asks = 1
     models = get_models()
     questions = questions.get_questions()
     both = True
